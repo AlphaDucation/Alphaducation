@@ -1,0 +1,534 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Livre interactif — Didactique des mathématiques et théorie de Van Hiele</title>
+  <style>
+    :root {
+      --bg:#0f172a;
+      --panel:#111827;
+      --card:#1f2937;
+      --accent:#38bdf8;
+      --accent-2:#a78bfa;
+      --text:#e5e7eb;
+      --muted:#94a3b8;
+      --ok:#34d399;
+      --warn:#fbbf24;
+    }
+
+    * { box-sizing: border-box; }
+
+    body {
+      margin: 0;
+      font-family: "Inter", "Segoe UI", Roboto, Arial, sans-serif;
+      background: radial-gradient(circle at top, #1e293b, var(--bg) 65%);
+      color: var(--text);
+      line-height: 1.65;
+    }
+
+    header {
+      position: sticky;
+      top: 0;
+      z-index: 100;
+      background: rgba(15, 23, 42, 0.92);
+      backdrop-filter: blur(8px);
+      border-bottom: 1px solid rgba(148, 163, 184, 0.22);
+      padding: 0.7rem 1rem;
+    }
+
+    .header-row {
+      display: flex;
+      gap: 0.75rem;
+      align-items: center;
+      justify-content: space-between;
+      flex-wrap: wrap;
+    }
+
+    .title {
+      font-size: 1rem;
+      font-weight: 700;
+      letter-spacing: 0.3px;
+    }
+
+    .controls {
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+      flex-wrap: wrap;
+    }
+
+    button {
+      border: 0;
+      background: linear-gradient(135deg, var(--accent), var(--accent-2));
+      color: #0f172a;
+      font-weight: 700;
+      padding: 0.45rem 0.8rem;
+      border-radius: 10px;
+      cursor: pointer;
+      transition: transform 0.18s ease;
+    }
+
+    button:hover { transform: translateY(-1px); }
+    button:disabled { opacity: 0.4; cursor: not-allowed; transform: none; }
+
+    .progress-wrap {
+      width: min(360px, 95vw);
+      height: 10px;
+      background: #334155;
+      border-radius: 999px;
+      overflow: hidden;
+      border: 1px solid rgba(148, 163, 184, 0.4);
+    }
+
+    .progress {
+      height: 100%;
+      width: 0%;
+      background: linear-gradient(90deg, var(--accent), var(--accent-2));
+      transition: width 0.35s ease;
+    }
+
+    main {
+      max-width: 1000px;
+      margin: 1.2rem auto 3rem;
+      padding: 0 1rem;
+    }
+
+    .page {
+      display: none;
+      animation: fadeIn 0.35s ease;
+      background: rgba(17, 24, 39, 0.85);
+      border: 1px solid rgba(148, 163, 184, 0.22);
+      border-radius: 18px;
+      padding: 1.25rem;
+      box-shadow: 0 12px 35px rgba(2, 6, 23, 0.45);
+    }
+
+    .page.active { display: block; }
+
+    @keyframes fadeIn {
+      from { opacity: 0; transform: translateY(8px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+
+    .kicker {
+      color: var(--accent);
+      text-transform: uppercase;
+      letter-spacing: 1.2px;
+      font-size: 0.74rem;
+      font-weight: 700;
+      margin-bottom: 0.2rem;
+    }
+
+    h1, h2, h3 { line-height: 1.25; }
+    h1 { font-size: clamp(1.4rem, 2.6vw, 2.2rem); margin: 0 0 0.5rem; }
+    h2 { margin-top: 0.2rem; color: #bfdbfe; }
+
+    .card-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+      gap: 0.9rem;
+      margin: 1rem 0;
+    }
+
+    .card {
+      background: linear-gradient(160deg, #1f2937, #111827);
+      border: 1px solid rgba(148, 163, 184, 0.25);
+      border-radius: 14px;
+      padding: 0.9rem;
+    }
+
+    .timeline {
+      border-left: 2px solid #475569;
+      margin: 0.8rem 0 1rem 0.35rem;
+      padding-left: 1rem;
+    }
+
+    .timeline div { margin: 0.8rem 0; position: relative; }
+    .timeline div::before {
+      content: "";
+      width: 10px;
+      height: 10px;
+      border-radius: 50%;
+      background: var(--accent);
+      position: absolute;
+      left: -1.35rem;
+      top: 0.45rem;
+    }
+
+    details {
+      background: rgba(30, 41, 59, 0.5);
+      border: 1px solid rgba(148, 163, 184, 0.3);
+      border-radius: 12px;
+      padding: 0.6rem 0.8rem;
+      margin: 0.55rem 0;
+    }
+
+    summary { cursor: pointer; font-weight: 700; }
+
+    .quiz-item {
+      background: rgba(30, 41, 59, 0.55);
+      border: 1px solid rgba(148, 163, 184, 0.25);
+      border-radius: 12px;
+      padding: 0.9rem;
+      margin: 0.8rem 0;
+    }
+
+    .quiz-item label {
+      display: block;
+      margin: 0.35rem 0;
+      cursor: pointer;
+    }
+
+    .badge {
+      display: inline-block;
+      padding: 0.2rem 0.55rem;
+      border-radius: 999px;
+      background: rgba(56, 189, 248, 0.2);
+      border: 1px solid rgba(56, 189, 248, 0.55);
+      color: #dbeafe;
+      font-size: 0.78rem;
+      margin-right: 0.35rem;
+      margin-bottom: 0.35rem;
+    }
+
+    #resultatTest {
+      margin-top: 1rem;
+      padding: 0.95rem;
+      border-radius: 12px;
+      border: 1px solid rgba(52, 211, 153, 0.35);
+      background: rgba(16, 185, 129, 0.12);
+      display: none;
+    }
+
+    .references li { margin: 0.5rem 0; }
+
+    footer {
+      text-align: center;
+      color: var(--muted);
+      font-size: 0.85rem;
+      margin-top: 1rem;
+    }
+  </style>
+</head>
+<body>
+  <header>
+    <div class="header-row">
+      <div class="title">📘 Livre interactif (15 pages) — Didactique mathématique & Van Hiele</div>
+      <div class="controls">
+        <button id="prevBtn" type="button">← Précédent</button>
+        <button id="nextBtn" type="button">Suivant →</button>
+        <span id="counter">Page 1 / 15</span>
+      </div>
+    </div>
+    <div class="progress-wrap" aria-label="Progression de lecture">
+      <div id="progressBar" class="progress"></div>
+    </div>
+  </header>
+
+  <main>
+    <section class="page active">
+      <p class="kicker">Page 1 — Ouverture</p>
+      <h1>Qu’est-ce que la didactique des mathématiques&nbsp;?</h1>
+      <p>La <strong>didactique des mathématiques</strong> est une discipline scientifique qui étudie comment les savoirs mathématiques sont enseignés et appris. Elle ne se limite pas à «&nbsp;bien expliquer&nbsp;» : elle analyse les situations d’apprentissage, les obstacles cognitifs, le rôle du langage, des représentations, des preuves et des interactions sociales.</p>
+      <div class="card-grid">
+        <article class="card"><h3>Objet</h3><p>Comprendre la circulation du savoir entre chercheurs, enseignants et apprenants.</p></article>
+        <article class="card"><h3>Finalité</h3><p>Concevoir des dispositifs efficaces, équitables et motivants.</p></article>
+        <article class="card"><h3>Champ</h3><p>Du primaire à l’université, en algèbre, analyse, géométrie, probabilités, etc.</p></article>
+      </div>
+      <p><span class="badge">TED-Ed style</span><span class="badge">Visualisation</span><span class="badge">Interactivité</span></p>
+    </section>
+
+    <section class="page">
+      <p class="kicker">Page 2 — Fondements</p>
+      <h2>Pourquoi la didactique est indispensable</h2>
+      <div class="timeline">
+        <div><strong>Transposition didactique :</strong> le savoir savant devient un savoir enseignable, puis appris.</div>
+        <div><strong>Contrat didactique :</strong> attentes implicites entre enseignant et élèves.</div>
+        <div><strong>Obstacle épistémologique :</strong> certaines idées intuitives bloquent l’accès à des concepts plus abstraits.</div>
+      </div>
+      <p>La difficulté en mathématiques n’est pas seulement due au niveau de l’élève ; elle est souvent produite par la façon dont le savoir est mis en scène.</p>
+    </section>
+
+    <section class="page">
+      <p class="kicker">Page 3 — Perspective historique</p>
+      <h2>Repères historiques rapides</h2>
+      <ul>
+        <li><strong>Années 1950–70 :</strong> montée de la recherche structurale et cognitive.</li>
+        <li><strong>Années 1980–90 :</strong> rôle du langage, des situations et de l’institutionnalisation des savoirs.</li>
+        <li><strong>Aujourd’hui :</strong> intégration du numérique, visualisation dynamique et évaluations formatives.</li>
+      </ul>
+      <p>La théorie de <strong>Pierre et Dina Van Hiele</strong> s’inscrit parmi les modèles majeurs du développement de la pensée mathématique, surtout en géométrie, mais ses principes peuvent éclairer l’enseignement avancé.</p>
+    </section>
+
+    <section class="page">
+      <p class="kicker">Page 4 — Focus Van Hiele</p>
+      <h2>La théorie de Van Hiele : idée centrale</h2>
+      <p>Les apprenants progressent à travers des <strong>niveaux de pensée</strong> qualitativement différents. Le passage d’un niveau à l’autre dépend surtout de l’<strong>enseignement</strong>, pas uniquement de l’âge.</p>
+      <details open>
+        <summary>Principe 1 — Discontinuité des niveaux</summary>
+        <p>Un raisonnement valide dans un niveau peut sembler incompréhensible à un autre niveau.</p>
+      </details>
+      <details>
+        <summary>Principe 2 — Langage spécifique</summary>
+        <p>Les mots « preuve », « relation », « structure » n’ont pas la même signification selon le niveau cognitif.</p>
+      </details>
+      <details>
+        <summary>Principe 3 — Progression guidée</summary>
+        <p>L’enseignant organise des activités orientées pour aider à la montée en abstraction.</p>
+      </details>
+    </section>
+
+    <section class="page">
+      <p class="kicker">Page 5 — Niveaux 0 et 1</p>
+      <h2>Niveau 0 (visualisation) et niveau 1 (analyse)</h2>
+      <div class="card-grid">
+        <article class="card">
+          <h3>Niveau 0 — Visualisation</h3>
+          <p>L’élève reconnaît des objets « à l’œil » (forme globale), sans utiliser de propriétés formelles.</p>
+        </article>
+        <article class="card">
+          <h3>Niveau 1 — Analyse</h3>
+          <p>L’élève identifie des propriétés (angles, côtés, symétries), mais sans relier encore les propriétés entre elles.</p>
+        </article>
+      </div>
+      <p><strong>Application en math avancée :</strong> en analyse, un étudiant peut reconnaître la forme d’une courbe (niveau 0), puis décrire monotonicité/convexité (niveau 1).</p>
+    </section>
+
+    <section class="page">
+      <p class="kicker">Page 6 — Niveaux 2 et 3</p>
+      <h2>Niveau 2 (déduction informelle) et niveau 3 (déduction formelle)</h2>
+      <div class="card-grid">
+        <article class="card">
+          <h3>Niveau 2</h3>
+          <p>On relie les propriétés, on formule des conjectures, on argumente de façon cohérente, mais encore partiellement informelle.</p>
+        </article>
+        <article class="card">
+          <h3>Niveau 3</h3>
+          <p>Maîtrise des définitions, axiomes, théorèmes et démonstrations structurées.</p>
+        </article>
+      </div>
+      <p>Dans un cours de théorie des groupes, passer de « je vois que ça marche sur des exemples » à « je démontre pour tout élément » illustre ce saut.</p>
+    </section>
+
+    <section class="page">
+      <p class="kicker">Page 7 — Niveau 4 et métathéorie</p>
+      <h2>Niveau 4 (rigueur / abstraction avancée)</h2>
+      <p>Le niveau 4 implique la comparaison de systèmes axiomatiques, la réflexion sur la nature des preuves, et la conscience métamathématique.</p>
+      <ul>
+        <li>Comparer géométrie euclidienne et non-euclidienne.</li>
+        <li>Analyser le statut d’un axiome dans un cadre donné.</li>
+        <li>Transférer des schémas de preuve entre domaines (algèbre, topologie, analyse).</li>
+      </ul>
+    </section>
+
+    <section class="page">
+      <p class="kicker">Page 8 — Les 5 phases pédagogiques</p>
+      <h2>Le modèle d’enseignement Van Hiele</h2>
+      <ol>
+        <li><strong>Information :</strong> exploration guidée du thème.</li>
+        <li><strong>Orientation dirigée :</strong> tâches ciblées et progressives.</li>
+        <li><strong>Explicitation :</strong> verbalisation et structuration du vocabulaire.</li>
+        <li><strong>Orientation libre :</strong> résolution de problèmes plus ouverts.</li>
+        <li><strong>Intégration :</strong> synthèse conceptuelle stable.</li>
+      </ol>
+      <p>Ces phases sont utilisables en classes avancées (prépa, licence, master) pour conduire la transition vers la preuve et la formalisation.</p>
+    </section>
+
+    <section class="page">
+      <p class="kicker">Page 9 — Conception de séquences</p>
+      <h2>Exemple : enseignement de l’intégrale impropre</h2>
+      <div class="card-grid">
+        <article class="card"><h3>Phase 1–2</h3><p>Visualiser des aires et tester numériquement des convergences/divergences.</p></article>
+        <article class="card"><h3>Phase 3</h3><p>Formaliser les définitions (limites de primitives, critères de comparaison).</p></article>
+        <article class="card"><h3>Phase 4–5</h3><p>Résoudre des problèmes non routiniers puis synthétiser en carte conceptuelle.</p></article>
+      </div>
+    </section>
+
+    <section class="page">
+      <p class="kicker">Page 10 — Obstacles fréquents</p>
+      <h2>Erreurs classiques et remédiations</h2>
+      <details open>
+        <summary>Obstacle A — Confusion exemple / preuve</summary>
+        <p>Remédiation : exiger des contre-exemples et une explicitation des quantificateurs.</p>
+      </details>
+      <details>
+        <summary>Obstacle B — Symbolisme sans sens</summary>
+        <p>Remédiation : alterner registres graphique, verbal, algébrique et formel.</p>
+      </details>
+      <details>
+        <summary>Obstacle C — Surcharge cognitive</summary>
+        <p>Remédiation : progression spiralaire et tâches graduées par niveau Van Hiele.</p>
+      </details>
+    </section>
+
+    <section class="page">
+      <p class="kicker">Page 11 — Évaluation didactique</p>
+      <h2>Évaluer autrement</h2>
+      <p>Une évaluation alignée sur Van Hiele doit mesurer :</p>
+      <ul>
+        <li>la qualité des raisonnements (pas seulement le résultat final),</li>
+        <li>la capacité de changement de registre (graphique ↔ symbolique ↔ verbal),</li>
+        <li>la robustesse de la justification en contexte nouveau.</li>
+      </ul>
+      <p>On combine ainsi évaluation diagnostique, formative et sommative.</p>
+    </section>
+
+    <section class="page">
+      <p class="kicker">Page 12 — Numérique et interactivité</p>
+      <h2>Style TED-Ed : engagement et narration</h2>
+      <p>Pour un rendu type TED-Ed, on associe :</p>
+      <ul>
+        <li>micro-histoires (problème déclencheur),</li>
+        <li>visualisations dynamiques (graphiques, schémas évolutifs),</li>
+        <li>questions courtes à rétroaction immédiate.</li>
+      </ul>
+      <p>Le numérique devient un amplificateur didactique s’il sert une progression conceptuelle claire.</p>
+    </section>
+
+    <section class="page">
+      <p class="kicker">Page 13 — Test de positionnement</p>
+      <h2>Pré-test Van Hiele (mathématiques avancées)</h2>
+      <p>Cochez la meilleure réponse à chaque question.</p>
+
+      <form id="testForm">
+        <div class="quiz-item">
+          <p><strong>Q1.</strong> Si une proposition est vraie sur 20 exemples numériques, alors elle est :</p>
+          <label><input type="radio" name="q1" value="0"> Certainement démontrée.</label>
+          <label><input type="radio" name="q1" value="1"> Plausible mais non démontrée.</label>
+          <label><input type="radio" name="q1" value="0"> Fausse.</label>
+        </div>
+
+        <div class="quiz-item">
+          <p><strong>Q2.</strong> Dans « ∀ε&gt;0, ∃δ&gt;0… », le point clé est :</p>
+          <label><input type="radio" name="q2" value="0"> Mémoriser la formule exacte sans interprétation.</label>
+          <label><input type="radio" name="q2" value="1"> Comprendre l’ordre logique des quantificateurs.</label>
+          <label><input type="radio" name="q2" value="0"> Tracer un graphique suffit.</label>
+        </div>
+
+        <div class="quiz-item">
+          <p><strong>Q3.</strong> Deux définitions équivalentes d’un même objet :</p>
+          <label><input type="radio" name="q3" value="1"> peuvent être choisies selon le problème à résoudre.</label>
+          <label><input type="radio" name="q3" value="0"> sont contradictoires.</label>
+          <label><input type="radio" name="q3" value="0"> n’existent jamais en mathématiques.</label>
+        </div>
+
+        <div class="quiz-item">
+          <p><strong>Q4.</strong> Face à un théorème, la compétence la plus avancée est :</p>
+          <label><input type="radio" name="q4" value="0"> apprendre la preuve par cœur.</label>
+          <label><input type="radio" name="q4" value="1"> adapter la structure de preuve à un autre contexte.</label>
+          <label><input type="radio" name="q4" value="0"> vérifier uniquement des cas simples.</label>
+        </div>
+
+        <button type="button" id="evalBtn">Évaluer mon niveau</button>
+      </form>
+      <div id="resultatTest"></div>
+    </section>
+
+    <section class="page">
+      <p class="kicker">Page 14 — Interprétation du test</p>
+      <h2>Barème indicatif (4 points)</h2>
+      <ul>
+        <li><strong>0–1 point :</strong> profil proche du niveau 1 (analyse fragmentée).</li>
+        <li><strong>2 points :</strong> transition vers niveau 2 (déduction informelle).</li>
+        <li><strong>3 points :</strong> niveau 2 solide, début niveau 3.</li>
+        <li><strong>4 points :</strong> niveau 3 bien établi, ouverture vers niveau 4.</li>
+      </ul>
+      <p>Ce test est un <em>positionnement rapide</em>, non un diagnostic psychométrique complet. Il doit être complété par une analyse de copies et d’entretiens.</p>
+    </section>
+
+    <section class="page">
+      <p class="kicker">Page 15 — Références</p>
+      <h2>Références essentielles</h2>
+      <ul class="references">
+        <li>Van Hiele, P. M. (1986). <em>Structure and Insight: A Theory of Mathematics Education</em>. Academic Press.</li>
+        <li>Fuys, D., Geddes, D., & Tischler, R. (1988). <em>The Van Hiele Model of Thinking in Geometry Among Adolescents</em>. NCTM.</li>
+        <li>Hoffer, A. (1981). Geometry is More Than Proof. <em>Mathematics Teacher</em>.</li>
+        <li>Brousseau, G. (1998). <em>Théorie des situations didactiques</em>. La Pensée Sauvage.</li>
+        <li>Chevallard, Y. (1985). <em>La transposition didactique</em>. La Pensée Sauvage.</li>
+        <li>Duval, R. (1995). <em>Sémiosis et pensée humaine</em>. Peter Lang.</li>
+        <li>NCTM (2014). <em>Principles to Actions: Ensuring Mathematical Success for All</em>.</li>
+      </ul>
+      <p><strong>Conseil pratique :</strong> utilisez ce livre comme base de formation d’enseignants, puis contextualisez les tâches selon la spécialité (analyse, algèbre, géométrie, probabilités).</p>
+    </section>
+
+    <footer>Conception : livre HTML interactif en français, style inspiré de l’esprit TED-Ed.</footer>
+  </main>
+
+  <script>
+    const pages = [...document.querySelectorAll('.page')];
+    const prevBtn = document.getElementById('prevBtn');
+    const nextBtn = document.getElementById('nextBtn');
+    const counter = document.getElementById('counter');
+    const progressBar = document.getElementById('progressBar');
+    let current = 0;
+
+    function updateView() {
+      pages.forEach((p, idx) => p.classList.toggle('active', idx === current));
+      counter.textContent = `Page ${current + 1} / ${pages.length}`;
+      progressBar.style.width = `${((current + 1) / pages.length) * 100}%`;
+      prevBtn.disabled = current === 0;
+      nextBtn.disabled = current === pages.length - 1;
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+    }
+
+    prevBtn.addEventListener('click', () => {
+      if (current > 0) { current--; updateView(); }
+    });
+
+    nextBtn.addEventListener('click', () => {
+      if (current < pages.length - 1) { current++; updateView(); }
+    });
+
+    document.addEventListener('keydown', (event) => {
+      if (event.key === 'ArrowRight' && current < pages.length - 1) {
+        current++; updateView();
+      }
+      if (event.key === 'ArrowLeft' && current > 0) {
+        current--; updateView();
+      }
+    });
+
+    const evalBtn = document.getElementById('evalBtn');
+    const resultatTest = document.getElementById('resultatTest');
+
+    if (evalBtn) {
+      evalBtn.addEventListener('click', () => {
+        const form = document.getElementById('testForm');
+        const data = new FormData(form);
+        const keys = ['q1', 'q2', 'q3', 'q4'];
+        let total = 0;
+        let answered = 0;
+
+        keys.forEach((k) => {
+          if (data.get(k) !== null) {
+            total += Number(data.get(k));
+            answered++;
+          }
+        });
+
+        if (answered < keys.length) {
+          resultatTest.style.display = 'block';
+          resultatTest.style.borderColor = 'rgba(251, 191, 36, 0.6)';
+          resultatTest.style.background = 'rgba(251, 191, 36, 0.12)';
+          resultatTest.innerHTML = '<strong>Réponse incomplète :</strong> veuillez répondre aux 4 questions.';
+          return;
+        }
+
+        let niveau = '';
+        if (total <= 1) niveau = 'Niveau Van Hiele 1 (analyse initiale)';
+        else if (total === 2) niveau = 'Transition vers le niveau 2 (déduction informelle)';
+        else if (total === 3) niveau = 'Niveau 2 solide, pré-niveau 3';
+        else niveau = 'Niveau 3 établi, avec potentiel niveau 4';
+
+        resultatTest.style.display = 'block';
+        resultatTest.style.borderColor = 'rgba(52, 211, 153, 0.45)';
+        resultatTest.style.background = 'rgba(16, 185, 129, 0.12)';
+        resultatTest.innerHTML = `<strong>Score :</strong> ${total}/4<br><strong>Positionnement :</strong> ${niveau}<br><em>Suggestion :</em> combinez ce résultat avec une évaluation qualitative des raisonnements écrits.`;
+      });
+    }
+
+    updateView();
+  </script>
+</body>
+</html>
